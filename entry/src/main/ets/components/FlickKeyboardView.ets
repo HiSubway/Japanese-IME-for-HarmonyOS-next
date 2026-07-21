@@ -202,14 +202,16 @@ export struct FlickKeyboardView {
   // Left column keys per row
   @Builder LeftKey(rowIdx: number) {
     if (rowIdx === 0) {
-      Text('123')
+      // 数字パッドの入口は「あA」キー側のサイクルに一本化した(setNumericPadEnabled
+      // 参照)。この枠は常に取消(直近削除した文字の復元)を表示する。
+      Text('取消')
         .fontFamily(JP_FONT_FAMILY)
         .fontSize(13).textAlign(TextAlign.Center)
         .width(this.flickKeyWidthVp).height('100%')
         .backgroundColor(kbTheme(this.isDark).specialBg).fontColor(kbTheme(this.isDark).onAccent)
         .borderRadius(CELL_RADIUS).shadow({ radius: 2, color: kbTheme(this.isDark).shadowColor, offsetY: 1 })
         .onClick(() => {
-          AppStorage.setOrCreate('keyboardSubMode', 'numeric');
+          AppStorage.setOrCreate('keyboardSubMode', 'deleteHistory');
         })
     } else if (rowIdx === 1) {
       Text('◄')
@@ -238,9 +240,7 @@ export struct FlickKeyboardView {
         .borderRadius(CELL_RADIUS).shadow({ radius: 2, color: kbTheme(this.isDark).shadowColor, offsetY: 1 })
         .onClick(() => {
           this.h().commitTopCandidate();
-          const cur = AppStorage.get<string>('inputMode') ?? InputMode.HIRAGANA;
-          const next = cur === InputMode.HIRAGANA ? InputMode.ALPHANUMERIC : InputMode.HIRAGANA;
-          AppStorage.setOrCreate('inputMode', next);
+          this.h().cycleInputMode();
         })
     }
   }

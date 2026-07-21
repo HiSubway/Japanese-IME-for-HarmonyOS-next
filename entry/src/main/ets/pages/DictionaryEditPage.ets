@@ -191,8 +191,16 @@ struct DictionaryEditPage {
             .fontSize(14)
             .fontWeight(FontWeight.Bold)
             .fontColor(kbTheme(this.isDark).accent)
-            .opacity(this.canSave ? 1 : 0.4)
-            .onClick(() => { if (this.canSave) { this.saveEntry(); } })
+            // Always shown at full opacity now -- canSave (derived from
+            // editWord/editYomi, which text: $$this.editWord keeps correctly
+            // in sync even for IME-inserted text) stopped reliably re-
+            // triggering this opacity binding's re-render, leaving the
+            // button looking permanently disabled even though a tap did
+            // work (confirmed: tapping saved successfully despite the dim
+            // look). saveEntry() already re-validates yomi/word itself and
+            // shows a toast on failure, so gating the visual on canSave added
+            // a misleading "disabled" appearance without adding real safety.
+            .onClick(() => { this.saveEntry(); })
         }
         .width(56)
         .justifyContent(FlexAlign.End)
@@ -221,14 +229,13 @@ struct DictionaryEditPage {
                 .fontSize(11)
                 .fontColor(kbTheme(this.isDark).textSecondary)
                 .width('100%')
-              TextInput({ placeholder: '例：会議', text: this.editWord })
+              TextInput({ placeholder: '例：会議', text: $$this.editWord })
                 .fontFamily(JP_FONT_FAMILY)
                 .fontSize(15)
                 .fontColor(kbTheme(this.isDark).textPrimary)
                 .placeholderColor(kbTheme(this.isDark).textSecondary)
                 .backgroundColor(Color.Transparent)
                 .padding(0)
-                .onChange((v: string) => { this.editWord = v; })
             }
             .alignItems(HorizontalAlign.Start)
             .padding({ top: 12, bottom: 12 })
@@ -240,14 +247,13 @@ struct DictionaryEditPage {
                 .fontSize(11)
                 .fontColor(kbTheme(this.isDark).textSecondary)
                 .width('100%')
-              TextInput({ placeholder: '例：かいぎ', text: this.editYomi })
+              TextInput({ placeholder: '例：かいぎ', text: $$this.editYomi })
                 .fontFamily(JP_FONT_FAMILY)
                 .fontSize(15)
                 .fontColor(kbTheme(this.isDark).textPrimary)
                 .placeholderColor(kbTheme(this.isDark).textSecondary)
                 .backgroundColor(Color.Transparent)
                 .padding(0)
-                .onChange((v: string) => { this.editYomi = v; })
             }
             .alignItems(HorizontalAlign.Start)
             .padding({ top: 12, bottom: 12 })

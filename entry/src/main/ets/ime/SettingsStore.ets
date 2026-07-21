@@ -13,6 +13,11 @@ export interface KeyboardSettings {
   // 'mozc' = optional statistical engine derived from mozc (see
   // KanaKanjiConverter.loadMozcEngine / THIRD_PARTY_NOTICES.md).
   conversionEngine: string;
+  // Whether the "あA"/"Aあ" mode-switch key cycles 日本語→アルファベット→数字
+  // (numeric pad) or just 日本語⇔アルファベット -- see InputHandler.cycleInputMode
+  // and KeyboardView.ets/FlickKeyboardView.ets's ModeKey/LeftKey. Off by
+  // default: most users reach digits fine from QWERTY/the number row.
+  numericPadEnabled: boolean;
 }
 
 const DEFAULTS: KeyboardSettings = {
@@ -20,6 +25,7 @@ const DEFAULTS: KeyboardSettings = {
   oneHandedMode: false,
   oneHandedSide: 'right',
   conversionEngine: 'custom',
+  numericPadEnabled: false,
 };
 
 export class SettingsStore {
@@ -35,16 +41,24 @@ export class SettingsStore {
       const oneHanded = await prefs.get('oneHandedMode', DEFAULTS.oneHandedMode);
       const side = await prefs.get('oneHandedSide', DEFAULTS.oneHandedSide);
       const engine = await prefs.get('conversionEngine', DEFAULTS.conversionEngine);
-      console.info('shuntiIME SettingsStore.load ok', JSON.stringify({ layout, oneHanded, side, engine, forceReload }));
+      const numericPad = await prefs.get('numericPadEnabled', DEFAULTS.numericPadEnabled);
+      console.info('shuntiIME SettingsStore.load ok', JSON.stringify({ layout, oneHanded, side, engine, numericPad, forceReload }));
       return {
         keyboardLayout: String(layout),
         oneHandedMode: oneHanded === true,
         oneHandedSide: String(side),
         conversionEngine: String(engine),
+        numericPadEnabled: numericPad === true,
       };
     } catch (e) {
       console.error('shuntiIME SettingsStore.load error', JSON.stringify(e));
-      return { keyboardLayout: DEFAULTS.keyboardLayout, oneHandedMode: DEFAULTS.oneHandedMode, oneHandedSide: DEFAULTS.oneHandedSide, conversionEngine: DEFAULTS.conversionEngine };
+      return {
+        keyboardLayout: DEFAULTS.keyboardLayout,
+        oneHandedMode: DEFAULTS.oneHandedMode,
+        oneHandedSide: DEFAULTS.oneHandedSide,
+        conversionEngine: DEFAULTS.conversionEngine,
+        numericPadEnabled: DEFAULTS.numericPadEnabled,
+      };
     }
   }
 
@@ -77,6 +91,14 @@ export class SettingsStore {
     } catch (e) {
       console.error('shuntiIME SettingsStore.saveConversionEngine error', JSON.stringify(e));
     }
+  }
+
+  static async saveNumericPadEnabled(context: common.Context, enabled: boolean): Promise<void> {
+    try {
+      const prefs = await dataPreferences.getPreferences(context, SettingsStore.STORE);
+      await prefs.put('numericPadEnabled', enabled);
+      await prefs.flush();
+    } catch (_e) {}
   }
 }
 
